@@ -20,9 +20,7 @@ Use the **English file** under `reports/en/` as the canonical citation target wh
 
 A machine-readable `CITATION.cff` is in the repo root. For **ChatGPT / research tools**, paste the **raw** GitHub URL of a specific English file after you publish this repo, e.g.:
 
-`https://github.com/<username>/radarai-weekly-reports/blob/main/reports/en/weekly-2026-03-06.md`
-
-Replace `<username>` with your GitHub user or org.
+`https://github.com/fisher-byte/radarai-weekly-reports/blob/main/reports/en/weekly-2026-03-06.md`
 
 ---
 
@@ -68,21 +66,11 @@ Report text and metadata: **[CC BY 4.0](LICENSE)** — free to quote with attrib
 
 ---
 
-## First-time push to GitHub (local machine)
+## GitHub remote (already live)
 
-This repo is **initialized with `main` and one commit**; no remote is configured here (SSH to GitHub was unavailable in the automation environment). On your Mac:
-
-1. Create an empty repository on GitHub named `radarai-weekly-reports` (no README/license).
-2. Run:
-
-```bash
-cd radarai-weekly-reports
-git remote add origin https://github.com/<username>/radarai-weekly-reports.git
-# or: git@github.com:<username>/radarai-weekly-reports.git
-git push -u origin main
-```
-
-3. Update `CITATION.cff` field `repository-code` to your real clone URL (optional but nice for Zenodo / citations).
+- **Repository**: [github.com/fisher-byte/radarai-weekly-reports](https://github.com/fisher-byte/radarai-weekly-reports)  
+- **Default branch**: `main`  
+- First-time setup / rotation / 与主项目对齐的推送方式见 [docs/GITHUB_SYNC_PLAYBOOK.md](docs/GITHUB_SYNC_PLAYBOOK.md)。
 
 ---
 

@@ -38,6 +38,8 @@ Main project path (typical): `radarai.top/` next to or above this folder as `rad
 
 The RadarAI **main** repo lists `radarai-weekly-reports/` in `.gitignore` so this directory can use its **own** `git` remote without nested-repo confusion. Clone or copy this folder when working on the mirror.
 
+**GitHub 推送、与主项目 `origin` 对齐、Token 安全**：见 [GITHUB_SYNC_PLAYBOOK.md](GITHUB_SYNC_PLAYBOOK.md)。
+
 ## License reminder
 
 Content: **CC BY 4.0**. Keep `LICENSE` in sync with the README credit line.
