@@ -7,7 +7,7 @@ type: dataset
 authors:
   - name: RadarAI
     website: https://radarai.top
-repository-code: https://github.com/radarai/radarai-weekly-reports
+repository-code: "https://github.com/radarai/radarai-weekly-reports"
 license: CC-BY-4.0
 date-released: "2026-03-23"
 identifiers:
