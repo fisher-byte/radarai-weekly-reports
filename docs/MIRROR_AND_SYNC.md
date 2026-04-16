@@ -18,7 +18,8 @@ Main project path (typical): `radarai.top/` next to or above this folder as `rad
 
 ## Sync steps (after a new weekly issue exists on the server)
 
-1. Copy or ensure `weekly_report.json` reflects the latest issue (or use DB export if you only have SQLite).
+1. Prefer the latest server-synced SQLite snapshot or local `data/radarai.db`.
+2. Fall back to `weekly_report.json` only if DB is unavailable.
 2. From **this** repo root:
 
    ```bash
@@ -26,6 +27,10 @@ Main project path (typical): `radarai.top/` next to or above this folder as `rad
    ```
 
    - `--translate` calls the same Qwen translator as `services/app_core._translate_weekly_report_to_en` when `content_en` is empty (requires parent `.env` with `QWEN_API_KEY`).
+   - Current source priority is:
+     1. `../data/server_snapshots/<latest>/radarai.db`
+     2. `../data/radarai.db`
+     3. `../data/weekly_report.json`
 
 3. Commit and push this repository.
 

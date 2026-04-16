@@ -46,7 +46,8 @@ Each YAML front matter includes `canonical` (live site), `mirror_en` / `mirror_z
 This folder is designed to live **next to** the RadarAI project (e.g. `radarai.top/radarai-weekly-reports/`). From this repo root:
 
 ```bash
-# English + Chinese from data/weekly_report.json; translate EN if missing (needs Qwen key in parent .env)
+# Preferred: read the latest server-snapshot DB first, then local DB, then weekly_report.json
+# Translate EN only if content_en is missing (needs Qwen key in parent .env)
 python3 scripts/sync_from_weekly_report_json.py --translate
 ```
 
@@ -54,6 +55,12 @@ Or point to a JSON file explicitly:
 
 ```bash
 python3 scripts/sync_from_weekly_report_json.py --translate /path/to/weekly_report.json
+```
+
+Or point to a SQLite DB explicitly:
+
+```bash
+python3 scripts/sync_from_weekly_report_json.py /path/to/radarai.db
 ```
 
 Commit and push. See [docs/MIRROR_AND_SYNC.md](docs/MIRROR_AND_SYNC.md) for the full workflow and how this relates to the main app.

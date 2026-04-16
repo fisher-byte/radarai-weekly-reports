@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """
-Export RadarAI weekly report JSON to Markdown: English-first (reports/en/), Chinese (reports/zh-CN/).
+Export RadarAI weekly report data to Markdown: English-first (reports/en/), Chinese (reports/zh-CN/).
 
 Usage:
-  python3 scripts/sync_from_weekly_report_json.py [--translate] [path/to/weekly_report.json]
+  python3 scripts/sync_from_weekly_report_json.py [--translate] [path/to/weekly_report.json|path/to/radarai.db]
 
   --translate   If content_en is empty, call Qwen via main project (requires ../.env with QWEN_API_KEY
                 and services/app_core.py import path). Omit if you only sync existing content_en.
 
-Default JSON path: ../data/weekly_report.json when this repo lives inside the RadarAI project.
+Default source priority when this repo lives inside the RadarAI project:
+  1. ../data/server_snapshots/<latest>/radarai.db
+  2. ../data/radarai.db
+  3. ../data/weekly_report.json
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -32,18 +36,40 @@ def _load_dotenv(env_path: Path) -> None:
             os.environ[k] = v
 
 
+def _latest_snapshot_db(main_root: Path) -> Path | None:
+    snapshot_root = main_root / "data" / "server_snapshots"
+    if not snapshot_root.exists():
+        return None
+    candidates = sorted(snapshot_root.glob("20*/radarai.db"), reverse=True)
+    return candidates[0].resolve() if candidates else None
+
+
 def _resolve_src(repo_root: Path, arg: str | None) -> Path | None:
+    main_root = repo_root.parent
     if arg:
         p = Path(arg).expanduser().resolve()
         return p if p.exists() else None
     candidates = [
-        repo_root.parent / "data" / "weekly_report.json",
-        repo_root.parent.parent / "radarai.top" / "data" / "weekly_report.json",
+        _latest_snapshot_db(main_root),
+        main_root / "data" / "radarai.db",
+        main_root / "data" / "weekly_report.json",
+        main_root.parent / "radarai.top" / "data" / "weekly_report.json",
     ]
     for p in candidates:
-        if p.exists():
+        if p and p.exists():
             return p.resolve()
     return None
+
+
+def _load_weekly_from_db(db_path: Path) -> dict | None:
+    conn = sqlite3.connect(db_path)
+    try:
+        row = conn.execute("SELECT data FROM weekly_report WHERE id = 1").fetchone()
+    finally:
+        conn.close()
+    if not row or not row[0]:
+        return None
+    return json.loads(row[0])
 
 
 def _translate_zh_to_en(zh: str, main_root: Path) -> str:
@@ -79,10 +105,16 @@ def main() -> int:
 
     src = _resolve_src(repo_root, args.json_path)
     if not src:
-        print("weekly_report.json not found. Pass path explicitly.", file=sys.stderr)
+        print("weekly report source not found. Pass JSON or DB path explicitly.", file=sys.stderr)
         return 1
 
-    data = json.loads(src.read_text(encoding="utf-8"))
+    if src.suffix.lower() == ".db":
+        data = _load_weekly_from_db(src)
+        if not data:
+            print(f"weekly_report not found in DB: {src}", file=sys.stderr)
+            return 1
+    else:
+        data = json.loads(src.read_text(encoding="utf-8"))
     slug = data.get("slug") or "weekly-unknown"
     period = data.get("period", "")
     gen = data.get("generated_at", "")
