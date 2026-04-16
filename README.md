@@ -47,7 +47,8 @@ This folder is designed to live **next to** the RadarAI project (e.g. `radarai.t
 
 ```bash
 # Preferred: read the latest server-snapshot DB first, then local DB, then weekly_report.json
-# Translate EN only if content_en is missing (needs Qwen key in parent .env)
+# When DB is used, the script syncs the current weekly_report row plus historical
+# weekly entries stored in updates(type=weekly_report).
 python3 scripts/sync_from_weekly_report_json.py --translate
 ```
 

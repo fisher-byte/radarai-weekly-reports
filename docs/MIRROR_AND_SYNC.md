@@ -31,6 +31,7 @@ Main project path (typical): `radarai.top/` next to or above this folder as `rad
      1. `../data/server_snapshots/<latest>/radarai.db`
      2. `../data/radarai.db`
      3. `../data/weekly_report.json`
+   - When the source is SQLite, the script also backfills historical weekly issues from `updates(type=weekly_report)` so the public mirror is not limited to the single latest row in `weekly_report`.
 
 3. Commit and push this repository.
 

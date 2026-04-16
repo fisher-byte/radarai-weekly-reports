@@ -72,6 +72,37 @@ def _load_weekly_from_db(db_path: Path) -> dict | None:
     return json.loads(row[0])
 
 
+def _load_historical_weeklies_from_db(db_path: Path) -> list[dict]:
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            """
+            SELECT slug, created_at, content, content_en
+            FROM updates
+            WHERE type = 'weekly_report'
+            ORDER BY created_at ASC
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+
+    items: list[dict] = []
+    for row in rows:
+        items.append(
+            {
+                "slug": row["slug"],
+                "period": "",
+                "generated_at": row["created_at"] or "",
+                "brief_count": 0,
+                "bocha_used": False,
+                "content": (row["content"] or "").strip(),
+                "content_en": (row["content_en"] or "").strip(),
+            }
+        )
+    return items
+
+
 def _translate_zh_to_en(zh: str, main_root: Path) -> str:
     """Use RadarAI app_core translator when available."""
     sys.path.insert(0, str(main_root))
@@ -108,43 +139,51 @@ def main() -> int:
         print("weekly report source not found. Pass JSON or DB path explicitly.", file=sys.stderr)
         return 1
 
+    reports: list[dict]
     if src.suffix.lower() == ".db":
-        data = _load_weekly_from_db(src)
-        if not data:
+        latest = _load_weekly_from_db(src)
+        reports = _load_historical_weeklies_from_db(src)
+        if latest:
+            merged = {item.get("slug"): item for item in reports}
+            merged[latest.get("slug") or "weekly-unknown"] = latest
+            reports = [merged[k] for k in sorted(merged.keys())]
+        if not reports:
             print(f"weekly_report not found in DB: {src}", file=sys.stderr)
             return 1
     else:
-        data = json.loads(src.read_text(encoding="utf-8"))
-    slug = data.get("slug") or "weekly-unknown"
-    period = data.get("period", "")
-    gen = data.get("generated_at", "")
-    zh_body = (data.get("content") or "").strip()
-    en_body = (data.get("content_en") or "").strip()
-
-    if not en_body and args.translate:
-        if not (main_project / "services" / "app_core.py").is_file():
-            print("Cannot --translate: main project app_core.py not found next to this repo.", file=sys.stderr)
-            return 1
-        print("Translating to English (Qwen)...", file=sys.stderr)
-        en_body = _translate_zh_to_en(zh_body, main_project)
-        if not en_body:
-            print("Translation failed or empty.", file=sys.stderr)
-            return 1
+        reports = [json.loads(src.read_text(encoding="utf-8"))]
 
     en_dir = repo_root / "reports" / "en"
     zh_dir = repo_root / "reports" / "zh-CN"
     en_dir.mkdir(parents=True, exist_ok=True)
     zh_dir.mkdir(parents=True, exist_ok=True)
 
-    meta = {
-        "slug": slug,
-        "period": period,
-        "generated_at": gen,
-        "brief_count": data.get("brief_count", 0),
-        "bocha_used": data.get("bocha_used", False),
-    }
+    for data in reports:
+        slug = data.get("slug") or "weekly-unknown"
+        period = data.get("period", "")
+        gen = data.get("generated_at", "")
+        zh_body = (data.get("content") or "").strip()
+        en_body = (data.get("content_en") or "").strip()
 
-    fm_en = f"""---
+        if not en_body and args.translate:
+            if not (main_project / "services" / "app_core.py").is_file():
+                print("Cannot --translate: main project app_core.py not found next to this repo.", file=sys.stderr)
+                return 1
+            print(f"Translating to English (Qwen) for {slug}...", file=sys.stderr)
+            en_body = _translate_zh_to_en(zh_body, main_project)
+            if not en_body:
+                print(f"Translation failed or empty for {slug}.", file=sys.stderr)
+                return 1
+
+        meta = {
+            "slug": slug,
+            "period": period,
+            "generated_at": gen,
+            "brief_count": data.get("brief_count", 0),
+            "bocha_used": data.get("bocha_used", False),
+        }
+
+        fm_en = f"""---
 title: "Weekly AI Hotspots"
 lang: en
 slug: {meta["slug"]}
@@ -157,7 +196,7 @@ mirror_zh: reports/zh-CN/{slug}.md
 ---
 
 """
-    fm_zh = f"""---
+        fm_zh = f"""---
 title: 每周 AI 热点
 lang: zh-CN
 slug: {meta["slug"]}
@@ -170,20 +209,20 @@ mirror_en: reports/en/{slug}.md
 ---
 
 """
-    en_path = en_dir / f"{slug}.md"
-    zh_path = zh_dir / f"{slug}.md"
+        en_path = en_dir / f"{slug}.md"
+        zh_path = zh_dir / f"{slug}.md"
 
-    if en_body:
-        en_path.write_text(fm_en + en_body + "\n", encoding="utf-8")
-        print(f"Wrote {en_path.relative_to(repo_root)}")
-    else:
-        print(f"Skip EN (no content_en); use --translate or generate on server. {en_path.name} not written.", file=sys.stderr)
+        if en_body:
+            en_path.write_text(fm_en + en_body + "\n", encoding="utf-8")
+            print(f"Wrote {en_path.relative_to(repo_root)}")
+        else:
+            print(f"Skip EN (no content_en); use --translate or generate on server. {en_path.name} not written.", file=sys.stderr)
 
-    if zh_body:
-        zh_path.write_text(fm_zh + zh_body + "\n", encoding="utf-8")
-        print(f"Wrote {zh_path.relative_to(repo_root)}")
-    else:
-        print("Skip ZH (no content).", file=sys.stderr)
+        if zh_body:
+            zh_path.write_text(fm_zh + zh_body + "\n", encoding="utf-8")
+            print(f"Wrote {zh_path.relative_to(repo_root)}")
+        else:
+            print(f"Skip ZH (no content) for {slug}.", file=sys.stderr)
 
     return 0
 
