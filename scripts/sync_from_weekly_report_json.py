@@ -224,7 +224,42 @@ mirror_en: reports/en/{slug}.md
         else:
             print(f"Skip ZH (no content) for {slug}.", file=sys.stderr)
 
+    _write_reports_index(repo_root, en_dir)
     return 0
+
+
+def _write_reports_index(repo_root: Path, en_dir: Path) -> None:
+    github_base = "https://github.com/fisher-byte/radarai-weekly-reports/blob/main"
+    lines = [
+        "# Weekly reports index",
+        "",
+        "English-first Markdown mirrors for RadarAI _Weekly AI Hotspots_.",
+        "",
+        "| Issue | English (canonical) | Chinese |",
+        "|-------|---------------------|---------|",
+    ]
+    for en_path in sorted(en_dir.glob("weekly-*.md")):
+        slug = en_path.stem
+        zh_rel = f"reports/zh-CN/{slug}.md"
+        en_rel = f"reports/en/{slug}.md"
+        lines.append(
+            f"| `{slug}` | "
+            f"[EN]({github_base}/{en_rel}) | "
+            f"[ZH]({github_base}/{zh_rel}) |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Related public repo",
+            "",
+            "Broader archive (updates briefs + weekly copy + articles): "
+            "[fisher-byte/radarai](https://github.com/fisher-byte/radarai).",
+            "",
+        ]
+    )
+    index_path = repo_root / "reports" / "README.md"
+    index_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"Wrote {index_path.relative_to(repo_root)}")
 
 
 if __name__ == "__main__":

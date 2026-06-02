@@ -39,6 +39,10 @@ LICENSE         # CC BY 4.0
 
 Each YAML front matter includes `canonical` (live site), `mirror_en` / `mirror_zh` cross-links, and metadata (`period`, `brief_count`, `bocha_used`).
 
+Issue index with GitHub blob links: [reports/README.md](reports/README.md).
+
+**Broader public hub** (updates briefs + weekly copy + article mirrors): [fisher-byte/radarai](https://github.com/fisher-byte/radarai). This repo remains the **canonical** target for citing a specific weekly issue in English.
+
 ---
 
 ## Syncing a new issue (maintainers)
@@ -64,7 +68,7 @@ Or point to a SQLite DB explicitly:
 python3 scripts/sync_from_weekly_report_json.py /path/to/radarai.db
 ```
 
-Commit and push. See [docs/MIRROR_AND_SYNC.md](docs/MIRROR_AND_SYNC.md) for the full workflow and how this relates to the main app.
+Commit and push this repo, then refresh the hub repo (see [docs/MIRROR_AND_SYNC.md](docs/MIRROR_AND_SYNC.md)). Main-project SOP: [docs/sop/public-github-mirror-sop.md](../docs/sop/public-github-mirror-sop.md) (in the RadarAI project root).
 
 ---
 

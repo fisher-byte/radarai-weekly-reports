@@ -68,12 +68,35 @@ git push -u origin main
 ## 5. 内容同步后再推送（每期周报）
 
 ```bash
+# 0. 主项目先拉服务器快照（在 radarai.top 根目录）
+bash scripts/sync_from_server.sh
+
 cd radarai-weekly-reports
-python3 scripts/sync_from_weekly_report_json.py --translate   # 需主项目 .env 里 Qwen Key
-git add reports/ README.md CITATION.cff llms.txt  # 按需
+python3 scripts/sync_from_weekly_report_json.py   # 已有 content_en 时可省略 --translate
+git add reports/ README.md CITATION.cff llms.txt docs/  # 按需
 git commit -m "sync weekly-YYYY-MM-DD"
 git push origin main
+
+# 1. 同步总公开归档仓（复制本仓 reports → radarai-public/weekly-reports/）
+cd ../radarai-public
+python3 scripts/sync_public_content.py
+git add weekly-reports/ updates/
+git commit -m "sync public hub after weekly mirror"
+git push origin main
 ```
+
+双仓维护清单见主项目 [docs/sop/public-github-mirror-sop.md](../../docs/sop/public-github-mirror-sop.md)。
+
+---
+
+## 5.1 与 fisher-byte/radarai 的关系
+
+| 仓库 | 角色 |
+|------|------|
+| `radarai-weekly-reports`（本仓） | 周报 **权威** 公开 Markdown；引用某一期周报优先用本仓 `reports/en/` |
+| `radarai` | 总公开入口：速报 `updates/` + 本仓周报的 **副本** `weekly-reports/` + 可选 `articles/` |
+
+两仓都要维护时：**先 push 本仓，再跑 `radarai-public` 的 `sync_public_content.py` 并 push**。
 
 ---
 

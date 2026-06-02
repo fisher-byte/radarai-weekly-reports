@@ -35,6 +35,18 @@ Main project path (typical): `radarai.top/` next to or above this folder as `rad
 
 3. Commit and push this repository.
 
+4. **Refresh the public hub repo** (`radarai-public/` → [fisher-byte/radarai](https://github.com/fisher-byte/radarai)) so `weekly-reports/` stays in sync:
+
+   ```bash
+   cd ../radarai-public
+   python3 scripts/sync_public_content.py
+   git add weekly-reports/ updates/
+   git commit -m "sync weekly-reports copy from radarai-weekly-reports"
+   git push origin main
+   ```
+
+   The hub copies `reports/en` and `reports/zh-CN` from this folder. If you skip step 4, GitHub users on `fisher-byte/radarai` may see stale weekly files even though this repo is current.
+
 ## Why English-first
 
 - **ChatGPT / Perplexity / academic tools** cite English sources more reliably.
